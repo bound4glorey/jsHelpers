@@ -1,13 +1,15 @@
 {
   "name": "my-js-helpers",
   "version": "1.0.0",
-  "description": "Build and validate HTML forms in plain JavaScript: FormBuilder, FormValidator, FormElement, FieldValidation, and Validation. No dependencies, no build step.",
+  "description": "Plain-JavaScript UI helpers with no dependencies and no build step, starting with forms: FormBuilder, FormValidator, FormElement, FieldValidation, and Validation.",
   "keywords": [
     "form",
     "validation",
     "form-builder",
     "form-validation",
-    "vanilla-js"
+    "vanilla-js",
+    "ui",
+    "helpers"
   ],
   "license": "MIT",
   "author": "bound4glorey",

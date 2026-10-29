@@ -1,6 +1,6 @@
 # jsHelpers
 
-Build and validate HTML forms in plain JavaScript — no dependencies, no build step.
+Plain-JavaScript helpers for common UI work — no dependencies, no build step. It starts with forms: building them, validating them, and collecting what to submit. More helpers are planned (see the [roadmap](#roadmap)).
 
 - **FormBuilder** creates accessible form fields (label, input, help text, error area) from a config object.
 - **FormValidator** checks them, shows the errors on the page, and collects the values to submit.
@@ -17,9 +17,11 @@ Build and validate HTML forms in plain JavaScript — no dependencies, no build 
 - [How validation behaves](#how-validation-behaves)
 - [Custom messages and alerts](#custom-messages-and-alerts)
 - [Installing](#installing)
+  - [From a CDN](#from-a-cdn)
 - [Browser support](#browser-support)
 - [Running the specs](#running-the-specs)
 - [Project layout](#project-layout)
+- [Roadmap](#roadmap)
 - [License](#license)
 
 ## Quick start
@@ -163,6 +165,27 @@ In a page without a bundler, load it as a module. Loading `src/index.js` also se
 <script type="module" src="src/index.js"></script>
 ```
 
+### From a CDN
+
+No download needed: [jsDelivr](https://www.jsdelivr.com/) serves the files straight from this repo.
+
+```html
+<script type="module">
+    import { FormBuilder, FormValidator } from "https://cdn.jsdelivr.net/gh/bound4glorey/jsHelpers@v1.0.0/src/index.js";
+
+    const form = FormBuilder.createForm();
+    // ...
+</script>
+```
+
+- **Pin a release.** `@v1.0.0` always serves exactly that release (versions are this repo's Git tags — see [CHANGELOG.md](CHANGELOG.md)). `@1` serves the newest 1.x release, which picks up fixes but can take a while to update after a release, because of caching.
+- **Avoid `@main`.** A branch changes under you and is cached, so pages can get a mix of old and new files.
+- To use the classes as globals instead of importing them, load the entry point as a module:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/gh/bound4glorey/jsHelpers@v1.0.0/src/index.js"></script>
+```
+
 ## Browser support
 
 Current versions of Chrome, Edge, Firefox, and Safari. The code uses modern JavaScript (private class members, static blocks, `Object.hasOwn`), so the minimums are roughly Chrome/Edge 94, Firefox 93, and Safari 16.4.
@@ -192,6 +215,17 @@ spec/utils/           Jasmine specs, one file per class
 SpecRunner.html       runs the specs in a browser
 Form.html             demo of every feature
 ```
+
+## Roadmap
+
+jsHelpers is meant to grow into a small toolkit of the UI pieces most projects end up writing themselves. Planned:
+
+- **Alerts and dialogs** — accessible modal alerts and confirmations (focus handling, Escape to close), usable on their own and as FormValidator's `alertHandler`.
+- **Toast notifications** — short, non-blocking messages that disappear on their own, announced to screen readers.
+- **AJAX helpers** — a small wrapper around `fetch` for sending form data and handling responses and errors, designed to work with `FormValidator`'s `data`.
+- **Other common UI items** — more of the building blocks that come up again and again.
+
+Everything new will follow the same approach as the form helpers: plain JavaScript, no dependencies, accessible by default, checked configs with clear errors, JSDoc, and specs in Chrome and Firefox. Ideas and requests are welcome — [open an issue](https://github.com/bound4glorey/jsHelpers/issues/new/choose).
 
 ## License
 
