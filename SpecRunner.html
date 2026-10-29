@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>jsHelpers — Jasmine Spec Runner</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jasmine/6.3.0/jasmine.min.css">
+</head>
+<body>
+
+<!-- Jasmine itself -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/6.3.0/jasmine.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/6.3.0/jasmine-html.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/6.3.0/boot0.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jasmine/6.3.0/boot1.js"></script>
+
+<!-- Code under test -->
+<!-- an ES module; it also sets the classes as globals for the specs.
+     Module scripts run in document order, so it loads before the specs. -->
+<script src="src/index.js" type="module"></script>
+
+<!-- Specs -->
+<script src="spec/utils/validation.spec.js" type="module"></script>
+<script src="spec/utils/formValidation.spec.js" type="module"></script>
+<script src="spec/utils/formElement.spec.js" type="module"></script>
+<script src="spec/utils/formValidator.spec.js" type="module"></script>
+<script src="spec/utils/formBuilder.spec.js" type="module"></script>
+
+</body>
+</html>

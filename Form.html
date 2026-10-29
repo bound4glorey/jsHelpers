@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FormValidator Test Harness</title>
+<style>
+    body { font-family: system-ui, Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 1.4rem; }
+    .formLine { margin-bottom: 16px; display: flex; flex-direction: column; }
+    .formLine.checkboxLine { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .formLine.checkboxLine .errorMessage { flex-basis: 100%; }
+    label { font-weight: 600; margin-bottom: 4px; }
+    .requiredLabel::after { content: " *"; color: #c0392b; }
+    input, select, textarea { padding: 6px 8px; font-size: 1rem; border: 1px solid #ccc; border-radius: 4px; }
+    input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"] { border-color: #c0392b; }
+    textarea { min-height: 70px; }
+    .errorMessage { color: #c0392b; font-size: 0.85rem; margin-top: 4px; min-height: 1em; }
+    label.errorLabel { color: #c0392b; }
+    button { margin-top: 12px; padding: 8px 18px; font-size: 1rem; cursor: pointer; }
+    /* The info/expand buttons FormBuilder makes use Font Awesome classes; this
+       page doesn't load Font Awesome, so give them plain-text icons instead. */
+    .linkButtonInfo, .linkButton { margin: 0 0 0 6px; padding: 0 6px; font-size: 1rem; background: none; border: none; color: #1565c0; }
+    .linkButtonInfo::before { content: "ⓘ"; }
+    .linkButton::before { content: "⤢"; }
+    .infoRegion { font-size: 0.85rem; color: #555; margin-top: 4px; }
+    .textarea-view.full-screen { position: fixed; inset: 0; z-index: 900; background: #fff; padding: 16px; }
+    .textarea-view.full-screen textarea { height: calc(100vh - 120px); }
+    .resultBox { margin-top: 24px; padding: 12px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa; white-space: pre-wrap; font-family: monospace; font-size: 0.85rem; display: none; }
+    .resultBox.show { display: block; }
+    .resultBox.valid { border-color: #2e7d32; background: #eef7ee; }
+    .resultBox.invalid { border-color: #c0392b; background: #fdeeee; }
+    .modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 999; }
+    .modalBox { background: #fff; border-radius: 6px; padding: 20px; max-width: 420px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+    .modalBox h3 { margin-top: 0; }
+    .modalBox button { margin-top: 16px; }
+</style>
+</head>
+<body>
+
+<h1>FormValidator Test Harness</h1>
+
+<h2>1. Dynamic form (built via FormBuilder)</h2>
+<p>Fields here are built with <code>FormBuilder.createForm()</code>, a form with its own field list, and its <code>createFormLine()</code>. Trigger errors by leaving required fields blank, entering an out-of-range age or a future birthday, a malformed email, too short a name, and so on. Errors are also listed in an alert.</p>
+
+<div id="formArea"></div>
+<button id="submitBtn" type="button">Validate &amp; Submit</button>
+<div id="resultBox" class="resultBox"></div>
+
+<hr style="margin: 40px 0;">
+
+<h2>2. Static form (hand-written markup)</h2>
+<p>This markup was <strong>not</strong> built by <code>FormBuilder</code> — it's plain HTML, wrapped in <code>FormElement</code>s and registered with its own <code>FormValidator</code>. Errors are written into the error containers you supply; anything you don't supply is left alone.</p>
+
+<div id="staticFormArea">
+    <div class="formLine">
+        <label for="staticUsername" id="staticUsernameLabel" class="requiredLabel">Username</label>
+        <input type="text" id="staticUsername" name="username" placeholder="at least 3 characters">
+        <div class="errorMessage" id="staticUsernameError" aria-live="polite"></div>
+    </div>
+    <div class="formLine">
+        <label for="staticPassword" id="staticPasswordLabel" class="requiredLabel">Password</label>
+        <input type="password" id="staticPassword" name="password" placeholder="at least 8 characters">
+        <div class="errorMessage" id="staticPasswordError" aria-live="polite"></div>
+    </div>
+    <div class="formLine checkboxLine">
+        <input type="checkbox" id="staticTerms" name="terms">
+        <label for="staticTerms" id="staticTermsLabel" class="requiredLabel">I agree to the terms</label>
+        <div class="errorMessage" id="staticTermsError" aria-live="polite"></div>
+    </div>
+</div>
+<button id="staticSubmitBtn" type="button">Validate Static Form</button>
+<div id="staticResultBox" class="resultBox"></div>
+
+<!-- The classes under test -->
+<script src="src/index.js" type="module"></script>
+
+<!-- a module too, so it runs after index.js (modules run in document order) -->
+<script type="module">
+// A minimal modal for FormValidator's alert. Passed in as "alertHandler";
+// FormValidator would otherwise look for a global $PCCDB.alert.
+function showModal({ heading, element }) {
+    const overlay = document.createElement("div");
+    overlay.className = "modalOverlay";
+    const box = document.createElement("div");
+    box.className = "modalBox";
+    box.setAttribute("role", "alertdialog");
+    box.setAttribute("aria-modal", "true");
+    const title = document.createElement("h3");
+    title.textContent = heading;
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.textContent = "Close";
+    closeButton.addEventListener("click", () => overlay.remove());
+    box.append(title, element, closeButton);
+    overlay.append(box);
+    document.body.append(overlay);
+    closeButton.focus();
+}
+
+// Shows a validate() outcome in a result box. Dates are shown as text.
+function showOutcome(boxId, { isValid, errors, data }) {
+    const box = document.getElementById(boxId);
+    box.classList.add("show");
+    box.classList.toggle("valid", isValid);
+    box.classList.toggle("invalid", !isValid);
+    box.textContent = JSON.stringify({ isValid, errors: errors.map(error => error.fullMessage), data }, null, 2);
+}
+
+// =====================================================================
+// 1. Dynamic form: one field per FormBuilder/validation feature.
+// =====================================================================
+const formArea = document.getElementById("formArea");
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+// A form with its own field list (FormBuilder.createForm()), so its fields
+// stay separate from any other form on the page.
+const contactForm = FormBuilder.createForm();
+
+const fields = [
+    contactForm.createFormLine({
+        label: "Full Name",
+        required: true,
+        minChars: 2,
+        maxChars: 50,
+        placeholderText: "Jane Doe",
+        metadata: { ajaxParamName: "fullName" }
+    }),
+    contactForm.createFormLine({
+        type: "email",
+        label: "Email",
+        required: true,
+        placeholderText: "jane@example.com",
+        info: "We'll only use this to reply to you.",
+        metadata: { ajaxParamName: "email" }
+    }),
+    contactForm.createFormLine({
+        type: "number",
+        label: "Age",
+        required: true,
+        min: 18,
+        max: 120,
+        metadata: { ajaxParamName: "age" }
+    }),
+    contactForm.createFormLine({
+        type: "date",
+        label: "Birthday",
+        max: today,
+        metadata: { ajaxParamName: "birthday" }
+    }),
+    contactForm.createFormLine({
+        type: "select",
+        label: "Country",
+        required: true,
+        options: ["United States", "United Kingdom", "Canada", "Other"],
+        placeholderText: "Select a country…",
+        metadata: { ajaxParamName: "country" }
+    }),
+    contactForm.createFormLine({
+        label: "Favorite Color",
+        dataList: ["Red", "Green", "Blue"],
+        metadata: { ajaxParamName: "favoriteColor" }
+    }),
+    contactForm.createFormLine({
+        type: "textarea",
+        label: "Comments",
+        maxChars: 500,
+        placeholderText: "Anything else we should know?",
+        info: "Tab inserts 4 spaces here.",
+        tabToSpaceCount: 4,
+        customValidator: (value) => value !== null && /https?:\/\//.test(value) ? ["must not contain links"] : [],
+        metadata: { ajaxParamName: "comments" }
+    }),
+    contactForm.createFormLine({
+        type: "checkbox",
+        label: "Subscribe to newsletter",
+        value: false,
+        metadata: { ajaxParamName: "subscribe" }
+    }),
+    contactForm.createFormLine({
+        type: "checkbox",
+        label: "I agree to the terms",
+        required: true,
+        metadata: { ajaxParamName: "terms" }
+    })
+];
+formArea.append(...fields.map(field => field.container));
+
+// validate() checks exactly this form's fields
+document.getElementById("submitBtn").addEventListener("click", () => {
+    showOutcome("resultBox", contactForm.validate({
+        displayAlert: true,
+        alertInstructions: "Please fix the following before submitting:",
+        alertHandler: showModal
+    }));
+});
+
+// =====================================================================
+// 2. Static form: existing markup wrapped in FormElements, with its own
+// FormValidator so its fields stay separate from the dynamic form's.
+// Validation rules go in a FieldValidation.
+// =====================================================================
+const staticFormValidator = new FormValidator([
+    new FormElement({
+        input: document.getElementById("staticUsername"),
+        labelElement: document.getElementById("staticUsernameLabel"),
+        errorMessageContainer: document.getElementById("staticUsernameError"),
+        validation: new FieldValidation({ required: true, minChars: 3 }),
+        metadata: { ajaxParamName: "username" }
+    }),
+    new FormElement({
+        input: document.getElementById("staticPassword"),
+        labelElement: document.getElementById("staticPasswordLabel"),
+        errorMessageContainer: document.getElementById("staticPasswordError"),
+        validation: new FieldValidation({ required: true, minChars: 8 }),
+        metadata: { ajaxParamName: "password" }
+    }),
+    new FormElement({
+        input: document.getElementById("staticTerms"),
+        labelElement: document.getElementById("staticTermsLabel"),
+        errorMessageContainer: document.getElementById("staticTermsError"),
+        validation: new FieldValidation({ expectedType: "boolean", required: true }),
+        metadata: { ajaxParamName: "terms" }
+    })
+]);
+
+document.getElementById("staticSubmitBtn").addEventListener("click", () => {
+    showOutcome("staticResultBox", staticFormValidator.validate());
+});
+</script>
+
+</body>
+</html>

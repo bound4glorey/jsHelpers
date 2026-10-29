@@ -1,0 +1,30 @@
+{
+  "name": "my-js-helpers",
+  "version": "1.0.0",
+  "description": "Build and validate HTML forms in plain JavaScript: FormBuilder, FormValidator, FormElement, FieldValidation, and Validation. No dependencies, no build step.",
+  "keywords": [
+    "form",
+    "validation",
+    "form-builder",
+    "form-validation",
+    "vanilla-js"
+  ],
+  "license": "MIT",
+  "author": "bound4glorey",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bound4glorey/jsHelpers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/bound4glorey/jsHelpers/issues"
+  },
+  "homepage": "https://github.com/bound4glorey/jsHelpers#readme",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "type": "module",
+  "files": [
+    "src"
+  ]
+}

@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Production/Build outputs
+dist/
+
+# Logs and system files
+.DS_Store
+npm-debug.log*
+
+# Local tool configuration
+.claude/
